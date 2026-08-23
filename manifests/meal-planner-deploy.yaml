@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: meal-planner-app
+  name: meal-planner-app
+  namespace: mealplanner
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: meal-planner-app
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: meal-planner-app
+    spec:
+      
+      containers:
+      - image: soberblue/mealplanner
+        name: mealplanner
+        ports:
+        - containerPort: 3000
+        resources: {}
+        envFrom:
+          - secretRef:
+              name: mealplanner-secret
+      imagePullSecrets:
+      - name: soberblue-reg
+status: {}

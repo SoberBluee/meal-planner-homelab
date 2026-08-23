@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  creationTimestamp: "2026-08-23T10:57:22Z"
+  labels:
+    kubernetes.io/metadata.name: mealplanner
+  name: mealplanner
+  resourceVersion: "5373045"
+  uid: 001b92d6-3966-441e-9a1b-f9bbbfd7d969
+spec:
+  finalizers:
+  - kubernetes
+status:
+  phase: Active

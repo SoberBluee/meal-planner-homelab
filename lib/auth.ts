@@ -13,7 +13,9 @@ export async function setSessionCookie(): Promise<void> {
   const cookieStore = await cookies();
   cookieStore.set(COOKIE_NAME, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    // Opt in with COOKIE_SECURE=true when serving over HTTPS.
+    // Default false so plain HTTP (e.g. NodePort) can keep the session cookie.
+    secure: process.env.COOKIE_SECURE === "true",
     sameSite: "lax",
     maxAge: sessionMaxAgeSeconds,
     path: "/",

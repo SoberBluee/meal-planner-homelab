@@ -20,6 +20,7 @@ Open [http://localhost:3000](http://localhost:3000). Default PIN is `1234` until
 |----------|-------------|
 | `APP_PIN` | Shared household PIN |
 | `AUTH_SECRET` | Secret for signing session cookies |
+| `COOKIE_SECURE` | Set to `true` when serving over HTTPS; leave unset/false for plain HTTP |
 
 ## Scripts
 

@@ -1,0 +1,11 @@
+apiVersion: v1
+data:
+  .dockerconfigjson: eyJhdXRocyI6eyJodHRwczovL2h1Yi5kb2NrZXIuY29tL3JlcG9zaXRvcmllcy9zb2JlcmJsdWUiOnsidXNlcm5hbWUiOiJTb2JlckJsdWUiLCJwYXNzd29yZCI6Imdlbmp5aC1zQXR3dXYtNm1pbWd1IiwiYXV0aCI6IlUyOWlaWEpDYkhWbE9tZGxibXA1YUMxelFYUjNkWFl0Tm0xcGJXZDEifX19
+kind: Secret
+metadata:
+  creationTimestamp: "2026-08-23T10:53:46Z"
+  name: soberblue-reg
+  namespace: default
+  resourceVersion: "5372697"
+  uid: 3ea8a538-31c8-4414-a21f-52a06dfee2cc
+type: kubernetes.io/dockerconfigjson
