@@ -20,7 +20,11 @@ Open [http://localhost:3000](http://localhost:3000).
 | `APP_PIN` | Shared household PIN used at login |
 | `AUTH_SECRET` | Secret for signing session cookies |
 | `COOKIE_SECURE` | Set `true` when serving the app over HTTPS |
-| `DATABASE_URL` | MySQL connection string (e.g. `mysql://user:pass@host:3306/db`) |
+| `DB_HOST` | MySQL host (e.g. `127.0.0.1` or your StatefulSet service DNS) |
+| `DB_PORT` | MySQL port (default `3306`) |
+| `DB_USER` | MySQL username |
+| `DB_PASSWORD` | MySQL password |
+| `DB_NAME` | MySQL database name |
 
 ## Scripts
 
@@ -38,9 +42,13 @@ pm2 start npm --name meal-planner -- start
 
 Point nginx or Caddy at `http://localhost:3000`.
 
-For Kubernetes, set `DATABASE_URL` to your MySQL StatefulSet service DNS, for example:
+For Kubernetes, point the `DB_*` variables at your MySQL StatefulSet service, for example:
 
-`mysql://mealplanner:<password>@mysql.mealplanner.svc.cluster.local:3306/mealplanner`
+- `DB_HOST=mysql.mealplanner.svc.cluster.local`
+- `DB_PORT=3306`
+- `DB_USER=mealplanner`
+- `DB_PASSWORD=<password>`
+- `DB_NAME=mealplanner`
 
 ## Flow
 
