@@ -4,6 +4,8 @@ import { PageShell } from "@/components/ui";
 import { db } from "@/lib/db";
 import { mealIngredients, meals } from "@/lib/schema";
 
+export const dynamic = "force-dynamic";
+
 export default async function MealsPage() {
   const allMeals = await db.select().from(meals).orderBy(asc(meals.title));
 

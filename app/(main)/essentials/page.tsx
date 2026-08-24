@@ -4,6 +4,8 @@ import { PageShell } from "@/components/ui";
 import { db } from "@/lib/db";
 import { essentialItems } from "@/lib/schema";
 
+export const dynamic = "force-dynamic";
+
 export default async function EssentialsPage() {
   const initialItems = await db
     .select()

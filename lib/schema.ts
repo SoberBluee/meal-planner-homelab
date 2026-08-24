@@ -1,28 +1,32 @@
-import { sqliteTable, text, integer, real } from "drizzle-orm/sqlite-core";
+import {
+  double,
+  int,
+  mysqlTable,
+  timestamp,
+  varchar,
+} from "drizzle-orm/mysql-core";
 
-export const meals = sqliteTable("meals", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  title: text("title").notNull(),
-  price: real("price"),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .notNull()
-    .$defaultFn(() => new Date()),
+export const meals = mysqlTable("meals", {
+  id: int("id").autoincrement().primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  price: double("price"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const mealIngredients = sqliteTable("meal_ingredients", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  mealId: integer("meal_id")
+export const mealIngredients = mysqlTable("meal_ingredients", {
+  id: int("id").autoincrement().primaryKey(),
+  mealId: int("meal_id")
     .notNull()
     .references(() => meals.id, { onDelete: "cascade" }),
-  name: text("name").notNull(),
-  quantity: real("quantity"),
-  unit: text("unit"),
+  name: varchar("name", { length: 255 }).notNull(),
+  quantity: double("quantity"),
+  unit: varchar("unit", { length: 64 }),
 });
 
-export const essentialItems = sqliteTable("essential_items", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  name: text("name").notNull(),
-  sortOrder: integer("sort_order").notNull().default(0),
+export const essentialItems = mysqlTable("essential_items", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  sortOrder: int("sort_order").notNull().default(0),
 });
 
 export type Meal = typeof meals.$inferSelect;

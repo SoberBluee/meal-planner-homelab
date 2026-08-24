@@ -15,7 +15,12 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Environment
 
-No required environment variables for the current version. PIN auth is disabled for now.
+| Variable | Description |
+|----------|-------------|
+| `APP_PIN` | Shared household PIN used at login |
+| `AUTH_SECRET` | Secret for signing session cookies |
+| `COOKIE_SECURE` | Set `true` when serving the app over HTTPS |
+| `DATABASE_URL` | MySQL connection string (e.g. `mysql://user:pass@host:3306/db`) |
 
 ## Scripts
 
@@ -32,6 +37,10 @@ pm2 start npm --name meal-planner -- start
 ```
 
 Point nginx or Caddy at `http://localhost:3000`.
+
+For Kubernetes, set `DATABASE_URL` to your MySQL StatefulSet service DNS, for example:
+
+`mysql://mealplanner:<password>@mysql.mealplanner.svc.cluster.local:3306/mealplanner`
 
 ## Flow
 

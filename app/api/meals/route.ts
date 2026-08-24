@@ -36,13 +36,29 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Title is required" }, { status: 400 });
   }
 
-  const [meal] = await db
+  const inserted = await db
     .insert(meals)
     .values({
       title,
       price: body.price ?? null,
     })
-    .returning();
+    .$returningId();
+
+  const mealId = inserted[0]?.id;
+  if (!mealId) {
+    return NextResponse.json(
+      { error: "Could not create meal" },
+      { status: 500 },
+    );
+  }
+
+  const [meal] = await db.select().from(meals).where(eq(meals.id, mealId));
+  if (!meal) {
+    return NextResponse.json(
+      { error: "Could not load created meal" },
+      { status: 500 },
+    );
+  }
 
   const ingredientRows = (body.ingredients ?? [])
     .map((item) => ({

@@ -16,13 +16,15 @@ export async function DELETE(_request: Request, context: RouteContext) {
   }
 
   const [item] = await db
-    .delete(essentialItems)
-    .where(eq(essentialItems.id, itemId))
-    .returning();
+    .select()
+    .from(essentialItems)
+    .where(eq(essentialItems.id, itemId));
 
   if (!item) {
     return NextResponse.json({ error: "Item not found" }, { status: 404 });
   }
+
+  await db.delete(essentialItems).where(eq(essentialItems.id, itemId));
 
   return NextResponse.json({ ok: true });
 }

@@ -30,18 +30,19 @@ export async function PUT(request: Request, context: RouteContext) {
     return NextResponse.json({ error: "Title is required" }, { status: 400 });
   }
 
-  const [meal] = await db
+  const [existingMeal] = await db.select().from(meals).where(eq(meals.id, mealId));
+
+  if (!existingMeal) {
+    return NextResponse.json({ error: "Meal not found" }, { status: 404 });
+  }
+
+  await db
     .update(meals)
     .set({
       title,
       price: body.price ?? null,
     })
-    .where(eq(meals.id, mealId))
-    .returning();
-
-  if (!meal) {
-    return NextResponse.json({ error: "Meal not found" }, { status: 404 });
-  }
+    .where(eq(meals.id, mealId));
 
   await db.delete(mealIngredients).where(eq(mealIngredients.mealId, mealId));
 
@@ -63,6 +64,11 @@ export async function PUT(request: Request, context: RouteContext) {
     .from(mealIngredients)
     .where(eq(mealIngredients.mealId, mealId));
 
+  const [meal] = await db.select().from(meals).where(eq(meals.id, mealId));
+  if (!meal) {
+    return NextResponse.json({ error: "Meal not found" }, { status: 404 });
+  }
+
   return NextResponse.json({ ...meal, ingredients });
 }
 
@@ -74,14 +80,13 @@ export async function DELETE(_request: Request, context: RouteContext) {
     return NextResponse.json({ error: "Invalid meal id" }, { status: 400 });
   }
 
-  const [meal] = await db
-    .delete(meals)
-    .where(eq(meals.id, mealId))
-    .returning();
+  const [meal] = await db.select().from(meals).where(eq(meals.id, mealId));
 
   if (!meal) {
     return NextResponse.json({ error: "Meal not found" }, { status: 404 });
   }
+
+  await db.delete(meals).where(eq(meals.id, mealId));
 
   return NextResponse.json({ ok: true });
 }

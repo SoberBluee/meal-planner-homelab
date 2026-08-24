@@ -26,13 +26,33 @@ export async function POST(request: Request) {
     -1,
   );
 
-  const [item] = await db
+  const inserted = await db
     .insert(essentialItems)
     .values({
       name,
       sortOrder: maxOrder + 1,
     })
-    .returning();
+    .$returningId();
+
+  const itemId = inserted[0]?.id;
+  if (!itemId) {
+    return NextResponse.json(
+      { error: "Could not create item" },
+      { status: 500 },
+    );
+  }
+
+  const [item] = await db
+    .select()
+    .from(essentialItems)
+    .where(eq(essentialItems.id, itemId));
+
+  if (!item) {
+    return NextResponse.json(
+      { error: "Could not load created item" },
+      { status: 500 },
+    );
+  }
 
   return NextResponse.json(item, { status: 201 });
 }
