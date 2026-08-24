@@ -7,20 +7,15 @@ A household meal planner and shopping list app for homelab use. Plan meals, main
 ```bash
 cd meal-planner
 npm install
-cp .env.local.example .env.local   # then edit PIN and secret
 npm run db:push
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). Default PIN is `1234` until you change `APP_PIN` in `.env.local`.
+Open [http://localhost:3000](http://localhost:3000).
 
 ## Environment
 
-| Variable | Description |
-|----------|-------------|
-| `APP_PIN` | Shared household PIN |
-| `AUTH_SECRET` | Secret for signing session cookies |
-| `COOKIE_SECURE` | Set to `true` when serving over HTTPS; leave unset/false for plain HTTP |
+No required environment variables for the current version. PIN auth is disabled for now.
 
 ## Scripts
 
