@@ -8,7 +8,7 @@ metadata:
 spec:
   selector:
     matchLabels:
-      app: meal-planner-db
+      app: mealplanner-db
   serviceName: "mealplanner-db-svc"
   replicas: 1
   template:
