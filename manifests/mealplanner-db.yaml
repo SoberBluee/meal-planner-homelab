@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mealplanner-db
+  namespace: mealplanner
+  labels:
+    app: mealplanner-db
+spec:
+  selector:
+    matchLabels:
+      app: meal-planner-db
+  serviceName: "mealplanner-db-svc"
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: mealplanner-db # has to match .spec.selector.matchLabels
+    spec:
+      containers:
+      - name: mysql
+        image: mysql:26.7.0
+        ports:
+        - containerPort: 3306
+          name: db
+        volumeMounts:
+        - name: mealplanner-data
+          mountPath: /var/lib/mysql
+  volumes:
+    - name: mealplanner-data
+      persistentVolumeClaim:
+        claimName: mealplanner-pvc
+  

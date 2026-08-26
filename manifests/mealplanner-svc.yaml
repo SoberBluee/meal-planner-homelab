@@ -15,5 +15,21 @@ spec:
   selector:
     app: meal-planner-app
   type: NodePort
-status:
-  loadBalancer: {}
+
+--- 
+
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: mealplanner-db-svc
+  name: mealplanner-db-svc
+  namespace: mealplanner
+spec:
+  clusterIP: None
+  ports:
+    - port: 3306
+      targetPort: 3306
+  selector:
+    app: mealplanner-db
+
