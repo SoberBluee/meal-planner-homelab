@@ -6,6 +6,9 @@ data:
   DB_PORT: "3306"
   DB_USER: mealplanner
   MYSQL_ROOT_PASSWORD: Test@123
+  MYSQL_USER: "mealplanner"
+  MYSQL_PASSWORD: Test@123
+  MYSQL_DATABASE: mealplanner
 kind: ConfigMap
 metadata:
   name: mealplanner-database-config
