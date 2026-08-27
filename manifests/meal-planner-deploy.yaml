@@ -9,7 +9,8 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app: meal-planner-app 
+      app: meal-planner-app
+  strategy: {}
   template:
     metadata:
       labels:
@@ -21,7 +22,4 @@ spec:
         ports:
         - containerPort: 3000
         resources: {}
-        envFrom:
-          - secretRef:
-              name: mealplanner-secret
 status: {}

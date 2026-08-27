@@ -1,0 +1,12 @@
+apiVersion: v1
+data:
+  DB_HOST: mealplanner-db-svc
+  DB_NAME: mealplanner
+  DB_PASSWORD: Test@123
+  DB_PORT: "3306"
+  DB_USER: mealplanner
+  MYSQL_ROOT_PASSWORD: Test@123
+kind: ConfigMap
+metadata:
+  name: mealplanner-database-config
+  namespace: mealplanner
