@@ -22,4 +22,7 @@ spec:
         ports:
         - containerPort: 3000
         resources: {}
+        envFrom:
+        - configMapRef: 
+            name: mealplanner-database-config
 status: {}
