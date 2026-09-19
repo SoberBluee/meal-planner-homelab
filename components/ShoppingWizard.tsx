@@ -10,9 +10,11 @@ import type {
   EssentialItemRecord,
   MealWithIngredients,
   ShoppingDraft,
+  Weekday,
+  WeekPlanDay,
 } from "@/lib/types";
-import { SHOPPING_DRAFT_KEY } from "@/lib/types";
-import { Button, EmptyState, FieldLabel, ListShell, TextInput } from "./ui";
+import { SHOPPING_DRAFT_KEY, WEEKDAYS } from "@/lib/types";
+import { Button, EmptyState, FieldLabel, ListShell, Select, TextInput } from "./ui";
 
 type WizardStep = "meals" | "essentials" | "review";
 
@@ -21,6 +23,14 @@ const steps: Array<{ id: WizardStep; label: string }> = [
   { id: "essentials", label: "Essentials" },
   { id: "review", label: "Review" },
 ];
+
+function emptyWeekPlan(): WeekPlanDay[] {
+  return WEEKDAYS.map((day) => ({
+    day,
+    mealId: null,
+    mealTitle: null,
+  }));
+}
 
 export default function ShoppingWizard({
   meals,
@@ -31,31 +41,45 @@ export default function ShoppingWizard({
 }) {
   const router = useRouter();
   const [step, setStep] = useState<WizardStep>("meals");
-  const [selectedMealIds, setSelectedMealIds] = useState<number[]>([]);
+  const [weekPlan, setWeekPlan] = useState<WeekPlanDay[]>(emptyWeekPlan);
   const [checkedEssentials, setCheckedEssentials] = useState<string[]>(
     essentials.map((item) => item.name),
   );
   const [extraEssentials, setExtraEssentials] = useState<string[]>([]);
   const [extraInput, setExtraInput] = useState("");
 
-  const selectedMeals = meals.filter((meal) => selectedMealIds.includes(meal.id));
+  const assignedDays = weekPlan.filter((entry) => entry.mealId != null);
+
+  const selectedMealIds = useMemo(
+    () => [...new Set(assignedDays.map((entry) => entry.mealId!))],
+    [assignedDays],
+  );
 
   const mealCost = useMemo(() => {
-    const prices = selectedMeals
-      .map((meal) => meal.price)
-      .filter((price): price is number => price != null);
-    if (prices.length === 0) return null;
-    return prices.reduce((sum, price) => sum + price, 0);
-  }, [selectedMeals]);
+    let total = 0;
+    let hasPrice = false;
+
+    for (const entry of assignedDays) {
+      const meal = meals.find((item) => item.id === entry.mealId);
+      if (meal?.price != null) {
+        total += meal.price;
+        hasPrice = true;
+      }
+    }
+
+    return hasPrice ? total : null;
+  }, [assignedDays, meals]);
 
   const mergedList = useMemo(() => {
-    const mealIngredients = selectedMeals.flatMap((meal) =>
-      meal.ingredients.map((item) => ({
+    const mealIngredients = assignedDays.flatMap((entry) => {
+      const meal = meals.find((item) => item.id === entry.mealId);
+      if (!meal) return [];
+      return meal.ingredients.map((item) => ({
         name: item.name,
         quantity: item.quantity,
         unit: item.unit,
-      })),
-    );
+      }));
+    });
 
     const essentialIngredients = [
       ...checkedEssentials.map((name) => ({ name })),
@@ -63,13 +87,25 @@ export default function ShoppingWizard({
     ];
 
     return mergeIngredients([...mealIngredients, ...essentialIngredients]);
-  }, [selectedMeals, checkedEssentials, extraEssentials]);
+  }, [assignedDays, meals, checkedEssentials, extraEssentials]);
 
-  function toggleMeal(id: number) {
-    setSelectedMealIds((current) =>
-      current.includes(id)
-        ? current.filter((mealId) => mealId !== id)
-        : [...current, id],
+  function setDayMeal(day: Weekday, mealIdValue: string) {
+    const mealId = mealIdValue ? Number.parseInt(mealIdValue, 10) : null;
+    const meal =
+      mealId != null && !Number.isNaN(mealId)
+        ? meals.find((item) => item.id === mealId)
+        : null;
+
+    setWeekPlan((current) =>
+      current.map((entry) =>
+        entry.day === day
+          ? {
+              day,
+              mealId: meal?.id ?? null,
+              mealTitle: meal?.title ?? null,
+            }
+          : entry,
+      ),
     );
   }
 
@@ -93,17 +129,23 @@ export default function ShoppingWizard({
   function finishTrip() {
     const draft: ShoppingDraft = {
       selectedMealIds,
+      weekPlan,
       checkedEssentials,
       extraEssentials,
       mealCost,
       mergedList,
-      listText: formatShoppingListText(mergedList, { mealCost }),
+      listText: formatShoppingListText(mergedList, {
+        mealCost,
+        weekPlan,
+      }),
     };
     sessionStorage.setItem(SHOPPING_DRAFT_KEY, JSON.stringify(draft));
     router.push("/shop/complete");
   }
 
   const stepIndex = steps.findIndex((item) => item.id === step);
+  const canContinueMeals =
+    assignedDays.length > 0 || essentials.length > 0;
 
   return (
     <div className="space-y-8">
@@ -132,49 +174,57 @@ export default function ShoppingWizard({
 
       {step === "meals" ? (
         <section className="space-y-6">
+          <p className="text-sm text-muted">
+            Assign a meal to each day you want to cook. The same meal can be used
+            more than once.
+          </p>
+
           {meals.length === 0 ? (
             <EmptyState>
               No meals saved yet. Add some on the Meals page first.
             </EmptyState>
           ) : (
-            <ListShell>
-              {meals.map((meal) => {
-                const checked = selectedMealIds.includes(meal.id);
-                return (
-                  <li key={meal.id}>
-                    <label className="flex cursor-pointer items-start gap-3 px-4 py-3.5 transition-colors hover:bg-background">
-                      <input
-                        type="checkbox"
-                        checked={checked}
-                        onChange={() => toggleMeal(meal.id)}
-                        className="mt-0.5"
-                      />
-                      <span className="flex-1">
-                        <span className="font-medium">{meal.title}</span>
-                        <span className="mt-0.5 block text-sm text-muted">
-                          {meal.ingredients.length} ingredients
-                          {meal.price != null
-                            ? ` · £${meal.price.toFixed(2)}`
-                            : ""}
-                        </span>
-                      </span>
-                    </label>
-                  </li>
-                );
-              })}
-            </ListShell>
+            <div className="space-y-3 rounded-xl border border-border bg-surface p-4">
+              {weekPlan.map((entry) => (
+                <div
+                  key={entry.day}
+                  className="grid gap-2 sm:grid-cols-[7rem_1fr] sm:items-center"
+                >
+                  <FieldLabel>{entry.day}</FieldLabel>
+                  <Select
+                    value={entry.mealId != null ? String(entry.mealId) : ""}
+                    onChange={(event) =>
+                      setDayMeal(entry.day, event.target.value)
+                    }
+                  >
+                    <option value="">None</option>
+                    {meals.map((meal) => (
+                      <option key={meal.id} value={meal.id}>
+                        {meal.title}
+                        {meal.price != null
+                          ? ` · £${meal.price.toFixed(2)}`
+                          : ""}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+              ))}
+            </div>
           )}
 
           {mealCost != null ? (
             <p className="text-sm text-muted">
-              Subtotal: <span className="font-medium text-foreground">£{mealCost.toFixed(2)}</span>
+              Subtotal:{" "}
+              <span className="font-medium text-foreground">
+                £{mealCost.toFixed(2)}
+              </span>
             </p>
           ) : null}
 
           <Button
             type="button"
             onClick={() => setStep("essentials")}
-            disabled={selectedMealIds.length === 0 && essentials.length === 0}
+            disabled={!canContinueMeals}
           >
             Continue
           </Button>
@@ -261,6 +311,21 @@ export default function ShoppingWizard({
 
       {step === "review" ? (
         <section className="space-y-6">
+          <div>
+            <h2 className="mb-3 text-sm font-medium text-muted">This week</h2>
+            <ListShell>
+              {weekPlan.map((entry) => (
+                <li key={entry.day} className="px-4 py-3 text-sm">
+                  <span className="font-medium">{entry.day}</span>
+                  {" — "}
+                  {entry.mealTitle ?? (
+                    <span className="text-muted">No meal</span>
+                  )}
+                </li>
+              ))}
+            </ListShell>
+          </div>
+
           <p className="text-sm text-muted">
             {mergedList.length} items · duplicates merged
           </p>
@@ -279,15 +344,25 @@ export default function ShoppingWizard({
           {mealCost != null ? (
             <p className="text-sm text-muted">
               Estimated cost:{" "}
-              <span className="font-medium text-foreground">£{mealCost.toFixed(2)}</span>
+              <span className="font-medium text-foreground">
+                £{mealCost.toFixed(2)}
+              </span>
             </p>
           ) : null}
 
           <div className="flex flex-wrap gap-3">
-            <Button type="button" variant="secondary" onClick={() => setStep("essentials")}>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setStep("essentials")}
+            >
               Back
             </Button>
-            <Button type="button" onClick={finishTrip} disabled={mergedList.length === 0}>
+            <Button
+              type="button"
+              onClick={finishTrip}
+              disabled={mergedList.length === 0}
+            >
               Finish & export
             </Button>
           </div>

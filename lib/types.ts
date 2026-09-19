@@ -24,8 +24,50 @@ export type EssentialItemRecord = {
   sortOrder: number;
 };
 
+export type IngredientRecord = {
+  id: number;
+  name: string;
+  sortOrder: number;
+  category: string;
+  printName: string;
+  price: number | null;
+};
+
+export const INGREDIENT_CATEGORIES = [
+  "Fruit",
+  "Vegetable",
+  "Meat",
+  "Fish",
+  "Dairy",
+  "Bakery",
+  "Pantry",
+  "Frozen",
+  "Other",
+] as const;
+
+export type IngredientCategory = (typeof INGREDIENT_CATEGORIES)[number];
+
+export const WEEKDAYS = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+] as const;
+
+export type Weekday = (typeof WEEKDAYS)[number];
+
+export type WeekPlanDay = {
+  day: Weekday;
+  mealId: number | null;
+  mealTitle: string | null;
+};
+
 export type ShoppingDraft = {
   selectedMealIds: number[];
+  weekPlan: WeekPlanDay[];
   checkedEssentials: string[];
   extraEssentials: string[];
   mealCost: number | null;

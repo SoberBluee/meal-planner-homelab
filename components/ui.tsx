@@ -82,6 +82,21 @@ export function TextInput({
   );
 }
 
+export function Select({
+  className = "",
+  children,
+  ...props
+}: React.SelectHTMLAttributes<HTMLSelectElement>) {
+  return (
+    <select
+      className={`w-full rounded-lg border border-border bg-surface px-3.5 py-2.5 text-sm outline-none transition-colors focus:border-accent focus:ring-2 focus:ring-accent/15 ${className}`}
+      {...props}
+    >
+      {children}
+    </select>
+  );
+}
+
 export function SectionTitle({ children }: { children: ReactNode }) {
   return (
     <h2 className="text-sm font-medium text-muted">{children}</h2>

@@ -21,4 +21,18 @@ const text = formatShoppingListText(merged, { mealCost: 24.5 });
 assert.match(text, /Shopping list/);
 assert.match(text, /£24.50/);
 
+const withWeek = formatShoppingListText(merged, {
+  mealCost: 24.5,
+  weekPlan: [
+    { day: "Monday", mealTitle: "Pizza" },
+    { day: "Tuesday", mealTitle: "Stir fry" },
+    { day: "Wednesday", mealTitle: null },
+  ],
+});
+assert.match(withWeek, /This week/);
+assert.match(withWeek, /Monday — Pizza/);
+assert.match(withWeek, /Tuesday — Stir fry/);
+assert.match(withWeek, /Wednesday —$/m);
+assert.ok(withWeek.indexOf("This week") < withWeek.indexOf("Shopping list"));
+
 console.log("merge-ingredients tests passed");

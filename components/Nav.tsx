@@ -7,6 +7,7 @@ const links = [
   { href: "/shop/new", label: "Shop" },
   { href: "/meals", label: "Meals" },
   { href: "/essentials", label: "Essentials" },
+  { href: "/ingredients", label: "Ingredients" },
 ];
 
 export default function Nav() {

@@ -85,7 +85,11 @@ export function mergeIngredients(
 
 export function formatShoppingListText(
   items: MergedIngredient[],
-  options?: { mealCost?: number | null; date?: Date },
+  options?: {
+    mealCost?: number | null;
+    date?: Date;
+    weekPlan?: Array<{ day: string; mealTitle: string | null }>;
+  },
 ): string {
   const date = options?.date ?? new Date();
   const dateStr = date.toLocaleDateString("en-GB", {
@@ -94,7 +98,21 @@ export function formatShoppingListText(
     month: "short",
   });
 
-  const lines = [`Shopping list — ${dateStr}`, ""];
+  const lines: string[] = [];
+
+  if (options?.weekPlan && options.weekPlan.length > 0) {
+    lines.push("This week");
+    for (const entry of options.weekPlan) {
+      lines.push(
+        entry.mealTitle
+          ? `${entry.day} — ${entry.mealTitle}`
+          : `${entry.day} —`,
+      );
+    }
+    lines.push("");
+  }
+
+  lines.push(`Shopping list — ${dateStr}`, "");
 
   for (const item of items) {
     lines.push(`□ ${item.display}`);

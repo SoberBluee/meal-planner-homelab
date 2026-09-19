@@ -13,6 +13,18 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+## Docker Compose (local)
+
+Starts MySQL and the Next.js app with hot reload:
+
+```bash
+docker compose up
+```
+
+Open [http://localhost:3000](http://localhost:3000). The app binds the project directory into the container, so code changes reload. Schema is applied with `npm run db:push` on startup.
+
+Stop with `Ctrl+C` or `docker compose down`. Add `-v` to `down` if you also want to wipe the MySQL volume.
+
 ## Environment
 
 | Variable | Description |

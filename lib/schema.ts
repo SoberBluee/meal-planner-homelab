@@ -29,9 +29,19 @@ export const essentialItems = mysqlTable("essential_items", {
   sortOrder: int("sort_order").notNull().default(0),
 });
 
+export const ingredients = mysqlTable("ingredients", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  sortOrder: int("sort_order").notNull().default(0),
+  category: varchar("category", { length: 255 }).notNull(),
+  printName: varchar("print_name", { length: 255 }).notNull(),
+  price: double("price"),
+});
+
 export type Meal = typeof meals.$inferSelect;
 export type MealIngredient = typeof mealIngredients.$inferSelect;
 export type EssentialItem = typeof essentialItems.$inferSelect;
+export type Ingredient = typeof ingredients.$inferSelect;
 
 export type IngredientInput = {
   name: string;
