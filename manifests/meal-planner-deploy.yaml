@@ -17,7 +17,7 @@ spec:
         app: meal-planner-app
     spec:
       containers:
-      - image: soberblue/mealplanner:1.1.0
+      - image: soberblue/mealplanner:1.2.0
         name: mealplanner
         ports:
         - containerPort: 3000
@@ -26,3 +26,8 @@ spec:
         - configMapRef: 
             name: mealplanner-database-config
 status: {}
+
+
+# docker buildx build \
+# --platform linux/amd64 \
+# -t soberblue/mealplanner:1.2.0 \
