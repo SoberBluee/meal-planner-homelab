@@ -28,7 +28,7 @@ export default async function ShopNewPage() {
     return (
       <PageShell
         title="New trip"
-        subtitle="Assign meals to days, confirm essentials, export your list."
+        subtitle="Pick meals, schedule the week, confirm essentials, export your list."
       >
         <ShoppingWizard meals={mealsWithIngredients} essentials={essentials} />
       </PageShell>

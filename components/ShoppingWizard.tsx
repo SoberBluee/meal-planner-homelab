@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   formatShoppingListText,
@@ -14,15 +14,18 @@ import type {
   WeekPlanDay,
 } from "@/lib/types";
 import { SHOPPING_DRAFT_KEY, WEEKDAYS } from "@/lib/types";
-import { Button, EmptyState, FieldLabel, ListShell, Select, TextInput } from "./ui";
+import { Button, EmptyState, FieldLabel, ListShell, TextInput } from "./ui";
 
-type WizardStep = "meals" | "essentials" | "review";
+type WizardStep = "meals" | "schedule" | "essentials" | "review";
 
 const steps: Array<{ id: WizardStep; label: string }> = [
   { id: "meals", label: "Meals" },
+  { id: "schedule", label: "Schedule" },
   { id: "essentials", label: "Essentials" },
   { id: "review", label: "Review" },
 ];
+
+const MEAL_DRAG_TYPE = "application/x-meal-id";
 
 function emptyWeekPlan(): WeekPlanDay[] {
   return WEEKDAYS.map((day) => ({
@@ -41,19 +44,31 @@ export default function ShoppingWizard({
 }) {
   const router = useRouter();
   const [step, setStep] = useState<WizardStep>("meals");
+  const [selectedMealIds, setSelectedMealIds] = useState<number[]>([]);
   const [weekPlan, setWeekPlan] = useState<WeekPlanDay[]>(emptyWeekPlan);
+  const [dragOverDay, setDragOverDay] = useState<Weekday | null>(null);
   const [checkedEssentials, setCheckedEssentials] = useState<string[]>(
     essentials.map((item) => item.name),
   );
   const [extraEssentials, setExtraEssentials] = useState<string[]>([]);
   const [extraInput, setExtraInput] = useState("");
 
+  const selectedMeals = meals.filter((meal) =>
+    selectedMealIds.includes(meal.id),
+  );
+
   const assignedDays = weekPlan.filter((entry) => entry.mealId != null);
 
-  const selectedMealIds = useMemo(
-    () => [...new Set(assignedDays.map((entry) => entry.mealId!))],
-    [assignedDays],
-  );
+  useEffect(() => {
+    setWeekPlan((current) =>
+      current.map((entry) => {
+        if (entry.mealId == null || selectedMealIds.includes(entry.mealId)) {
+          return entry;
+        }
+        return { day: entry.day, mealId: null, mealTitle: null };
+      }),
+    );
+  }, [selectedMealIds]);
 
   const mealCost = useMemo(() => {
     let total = 0;
@@ -89,24 +104,62 @@ export default function ShoppingWizard({
     return mergeIngredients([...mealIngredients, ...essentialIngredients]);
   }, [assignedDays, meals, checkedEssentials, extraEssentials]);
 
-  function setDayMeal(day: Weekday, mealIdValue: string) {
-    const mealId = mealIdValue ? Number.parseInt(mealIdValue, 10) : null;
-    const meal =
-      mealId != null && !Number.isNaN(mealId)
-        ? meals.find((item) => item.id === mealId)
-        : null;
+  function toggleMeal(id: number) {
+    setSelectedMealIds((current) =>
+      current.includes(id)
+        ? current.filter((mealId) => mealId !== id)
+        : [...current, id],
+    );
+  }
+
+  function assignMealToDay(day: Weekday, mealId: number) {
+    const meal = meals.find((item) => item.id === mealId);
+    if (!meal || !selectedMealIds.includes(mealId)) return;
 
     setWeekPlan((current) =>
       current.map((entry) =>
         entry.day === day
-          ? {
-              day,
-              mealId: meal?.id ?? null,
-              mealTitle: meal?.title ?? null,
-            }
+          ? { day, mealId: meal.id, mealTitle: meal.title }
           : entry,
       ),
     );
+  }
+
+  function clearDay(day: Weekday) {
+    setWeekPlan((current) =>
+      current.map((entry) =>
+        entry.day === day
+          ? { day, mealId: null, mealTitle: null }
+          : entry,
+      ),
+    );
+  }
+
+  function onMealDragStart(
+    event: React.DragEvent<HTMLDivElement>,
+    mealId: number,
+  ) {
+    event.dataTransfer.setData(MEAL_DRAG_TYPE, String(mealId));
+    event.dataTransfer.effectAllowed = "copy";
+  }
+
+  function onDayDragOver(
+    event: React.DragEvent<HTMLDivElement>,
+    day: Weekday,
+  ) {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "copy";
+    setDragOverDay(day);
+  }
+
+  function onDayDrop(event: React.DragEvent<HTMLDivElement>, day: Weekday) {
+    event.preventDefault();
+    setDragOverDay(null);
+    const raw = event.dataTransfer.getData(MEAL_DRAG_TYPE);
+    const mealId = Number.parseInt(raw, 10);
+    if (!Number.isNaN(mealId)) {
+      assignMealToDay(day, mealId);
+    }
   }
 
   function toggleEssential(name: string) {
@@ -145,11 +198,11 @@ export default function ShoppingWizard({
 
   const stepIndex = steps.findIndex((item) => item.id === step);
   const canContinueMeals =
-    assignedDays.length > 0 || essentials.length > 0;
+    selectedMealIds.length > 0 || essentials.length > 0;
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         {steps.map((item, index) => (
           <div key={item.id} className="flex items-center gap-2">
             <button
@@ -174,41 +227,128 @@ export default function ShoppingWizard({
 
       {step === "meals" ? (
         <section className="space-y-6">
-          <p className="text-sm text-muted">
-            Assign a meal to each day you want to cook. The same meal can be used
-            more than once.
-          </p>
-
           {meals.length === 0 ? (
             <EmptyState>
               No meals saved yet. Add some on the Meals page first.
             </EmptyState>
           ) : (
-            <div className="space-y-3 rounded-xl border border-border bg-surface p-4">
-              {weekPlan.map((entry) => (
-                <div
-                  key={entry.day}
-                  className="grid gap-2 sm:grid-cols-[7rem_1fr] sm:items-center"
-                >
-                  <FieldLabel>{entry.day}</FieldLabel>
-                  <Select
-                    value={entry.mealId != null ? String(entry.mealId) : ""}
-                    onChange={(event) =>
-                      setDayMeal(entry.day, event.target.value)
-                    }
-                  >
-                    <option value="">None</option>
-                    {meals.map((meal) => (
-                      <option key={meal.id} value={meal.id}>
-                        {meal.title}
+            <ListShell>
+              {meals.map((meal) => {
+                const checked = selectedMealIds.includes(meal.id);
+                return (
+                  <li key={meal.id}>
+                    <label className="flex cursor-pointer items-start gap-3 px-4 py-3.5 transition-colors hover:bg-background">
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => toggleMeal(meal.id)}
+                        className="mt-0.5"
+                      />
+                      <span className="flex-1">
+                        <span className="font-medium">{meal.title}</span>
+                        <span className="mt-0.5 block text-sm text-muted">
+                          {meal.ingredients.length} ingredients
+                          {meal.price != null
+                            ? ` · £${meal.price.toFixed(2)}`
+                            : ""}
+                        </span>
+                      </span>
+                    </label>
+                  </li>
+                );
+              })}
+            </ListShell>
+          )}
+
+          <Button
+            type="button"
+            onClick={() => setStep("schedule")}
+            disabled={!canContinueMeals}
+          >
+            Continue
+          </Button>
+        </section>
+      ) : null}
+
+      {step === "schedule" ? (
+        <section className="space-y-6">
+          <p className="text-sm text-muted">
+            Drag meals from the left into each day. The same meal can go on more
+            than one day.
+          </p>
+
+          {selectedMeals.length === 0 ? (
+            <EmptyState>
+              No meals selected. Go back and choose meals for this trip.
+            </EmptyState>
+          ) : (
+            <div className="grid gap-6 lg:grid-cols-[minmax(0,14rem)_1fr]">
+              <div>
+                <h2 className="mb-3 text-sm font-medium text-muted">Meals</h2>
+                <div className="space-y-2">
+                  {selectedMeals.map((meal) => (
+                    <div
+                      key={meal.id}
+                      draggable
+                      onDragStart={(event) => onMealDragStart(event, meal.id)}
+                      className="cursor-grab rounded-xl border border-border bg-surface px-3 py-3 active:cursor-grabbing"
+                    >
+                      <p className="font-medium">{meal.title}</p>
+                      <p className="mt-0.5 text-sm text-muted">
+                        {meal.ingredients.length} ingredients
                         {meal.price != null
                           ? ` · £${meal.price.toFixed(2)}`
                           : ""}
-                      </option>
-                    ))}
-                  </Select>
+                      </p>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </div>
+
+              <div>
+                <h2 className="mb-3 text-sm font-medium text-muted">This week</h2>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {weekPlan.map((entry) => {
+                    const active = dragOverDay === entry.day;
+                    return (
+                      <div
+                        key={entry.day}
+                        onDragOver={(event) => onDayDragOver(event, entry.day)}
+                        onDragLeave={() =>
+                          setDragOverDay((current) =>
+                            current === entry.day ? null : current,
+                          )
+                        }
+                        onDrop={(event) => onDayDrop(event, entry.day)}
+                        className={`min-h-[5.5rem] rounded-xl border border-dashed p-3 transition-colors ${
+                          active
+                            ? "border-accent bg-accent/10"
+                            : "border-border bg-surface"
+                        }`}
+                      >
+                        <div className="mb-2 flex items-center justify-between gap-2">
+                          <span className="text-sm font-medium">{entry.day}</span>
+                          {entry.mealId != null ? (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => clearDay(entry.day)}
+                            >
+                              Clear
+                            </Button>
+                          ) : null}
+                        </div>
+                        {entry.mealTitle ? (
+                          <p className="text-sm font-medium">{entry.mealTitle}</p>
+                        ) : (
+                          <p className="text-sm text-muted">Drop a meal here</p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           )}
 
@@ -221,25 +361,36 @@ export default function ShoppingWizard({
             </p>
           ) : null}
 
-          <Button
-            type="button"
-            onClick={() => setStep("essentials")}
-            disabled={!canContinueMeals}
-          >
-            Continue
-          </Button>
+          <div className="flex flex-wrap gap-3">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setStep("meals")}
+            >
+              Back
+            </Button>
+            <Button
+              type="button"
+              onClick={() => setStep("essentials")}
+              disabled={assignedDays.length === 0}
+            >
+              Continue
+            </Button>
+          </div>
         </section>
       ) : null}
 
       {step === "essentials" ? (
         <section className="space-y-6">
           <p className="text-sm text-muted">
-            Your usual staples are pre-selected. Uncheck or add extras for this week.
+            Your usual staples are pre-selected. Uncheck or add extras for this
+            week.
           </p>
 
           {essentials.length === 0 && extraEssentials.length === 0 ? (
             <EmptyState>
-              No essentials template yet. Add items below or set them up on the Essentials page.
+              No essentials template yet. Add items below or set them up on the
+              Essentials page.
             </EmptyState>
           ) : (
             <ListShell>
@@ -293,13 +444,21 @@ export default function ShoppingWizard({
                 }}
               />
             </div>
-            <Button type="button" variant="secondary" onClick={addExtraEssential}>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={addExtraEssential}
+            >
               Add
             </Button>
           </div>
 
           <div className="flex flex-wrap gap-3">
-            <Button type="button" variant="secondary" onClick={() => setStep("meals")}>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setStep("schedule")}
+            >
               Back
             </Button>
             <Button type="button" onClick={() => setStep("review")}>
