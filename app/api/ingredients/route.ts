@@ -8,7 +8,7 @@ export async function GET() {
   const items = await db
     .select()
     .from(ingredients)
-    .orderBy(asc(ingredients.sortOrder), asc(ingredients.name));
+    .orderBy(asc(ingredients.name));
 
   return NextResponse.json(items);
 }

@@ -30,7 +30,11 @@ export default function IngredientsList({
   async function refreshItems() {
     const response = await fetch("/api/ingredients");
     const data = (await response.json()) as IngredientRecord[];
-    setItems(data);
+    setItems(
+      [...data].sort((a, b) =>
+        a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
+      ),
+    );
   }
 
   async function addItem(event: React.FormEvent) {

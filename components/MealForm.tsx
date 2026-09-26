@@ -7,7 +7,8 @@ import type {
   IngredientRecord,
   MealWithIngredients,
 } from "@/lib/types";
-import { Button, FieldLabel, Select, TextInput } from "./ui";
+import SearchableSelect from "./SearchableSelect";
+import { Button, FieldLabel, TextInput } from "./ui";
 
 const emptyIngredient = (): IngredientFormRow => ({
   name: "",
@@ -60,7 +61,11 @@ export default function MealForm({
         }
         const data = (await response.json()) as IngredientRecord[];
         if (!cancelled) {
-          setCatalog(data);
+          setCatalog(
+            [...data].sort((a, b) =>
+              a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
+            ),
+          );
           setCatalogLoaded(true);
         }
       } catch {
@@ -195,25 +200,21 @@ export default function MealForm({
                   key={`ingredient-${index}`}
                   className="grid gap-2 sm:grid-cols-[2fr_1fr_1fr_auto] sm:items-center"
                 >
-                  <Select
+                  <SearchableSelect
                     value={row.name}
-                    onChange={(event) =>
-                      updateIngredient(index, "name", event.target.value)
-                    }
+                    onChange={(next) => updateIngredient(index, "name", next)}
+                    placeholder="Select ingredient"
                     required
-                  >
-                    <option value="" disabled>
-                      Select ingredient
-                    </option>
-                    {orphanName ? (
-                      <option value={orphanName}>{orphanName}</option>
-                    ) : null}
-                    {catalog.map((item) => (
-                      <option key={item.id} value={item.name}>
-                        {item.name}
-                      </option>
-                    ))}
-                  </Select>
+                    options={[
+                      ...(orphanName
+                        ? [{ value: orphanName, label: orphanName }]
+                        : []),
+                      ...catalog.map((item) => ({
+                        value: item.name,
+                        label: item.name,
+                      })),
+                    ]}
+                  />
                   <TextInput
                     value={row.quantity}
                     onChange={(event) =>

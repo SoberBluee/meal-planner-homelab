@@ -12,7 +12,7 @@ export default async function IngredientsPage() {
     const initialItems = await db
       .select()
       .from(ingredients)
-      .orderBy(asc(ingredients.sortOrder), asc(ingredients.name));
+      .orderBy(asc(ingredients.name));
 
     return (
       <PageShell
