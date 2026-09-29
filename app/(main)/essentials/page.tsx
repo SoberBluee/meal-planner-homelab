@@ -1,18 +1,13 @@
-import { asc } from "drizzle-orm";
 import EssentialsList from "@/components/EssentialsList";
 import { PageShell } from "@/components/ui";
-import { db } from "@/lib/db";
 import { renderPageError } from "@/lib/page-error";
-import { essentialItems } from "@/lib/schema";
+import { getEssentials } from "@/lib/queries";
 
 export const dynamic = "force-dynamic";
 
 export default async function EssentialsPage() {
   try {
-    const initialItems = await db
-      .select()
-      .from(essentialItems)
-      .orderBy(asc(essentialItems.sortOrder), asc(essentialItems.name));
+    const initialItems = await getEssentials();
 
     return (
       <PageShell

@@ -1,15 +1,12 @@
-import { asc, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { getEssentials } from "@/lib/queries";
+import { CACHE_KEYS, invalidate } from "@/lib/redis";
 import { essentialItems } from "@/lib/schema";
 
 export async function GET() {
-  const items = await db
-    .select()
-    .from(essentialItems)
-    .orderBy(asc(essentialItems.sortOrder), asc(essentialItems.name));
-
-  return NextResponse.json(items);
+  return NextResponse.json(await getEssentials());
 }
 
 export async function POST(request: Request) {
@@ -33,6 +30,8 @@ export async function POST(request: Request) {
       sortOrder: maxOrder + 1,
     })
     .$returningId();
+
+  await invalidate(CACHE_KEYS.essentials);
 
   const itemId = inserted[0]?.id;
   if (!itemId) {
@@ -76,10 +75,7 @@ export async function PUT(request: Request) {
       .where(eq(essentialItems.id, item.id));
   }
 
-  const items = await db
-    .select()
-    .from(essentialItems)
-    .orderBy(asc(essentialItems.sortOrder), asc(essentialItems.name));
+  await invalidate(CACHE_KEYS.essentials);
 
-  return NextResponse.json(items);
+  return NextResponse.json(await getEssentials());
 }

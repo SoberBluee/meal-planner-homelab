@@ -1,18 +1,13 @@
-import { asc } from "drizzle-orm";
 import IngredientsList from "@/components/IngredientsList";
 import { PageShell } from "@/components/ui";
-import { db } from "@/lib/db";
 import { renderPageError } from "@/lib/page-error";
-import { ingredients } from "@/lib/schema";
+import { getIngredients } from "@/lib/queries";
 
 export const dynamic = "force-dynamic";
 
 export default async function IngredientsPage() {
   try {
-    const initialItems = await db
-      .select()
-      .from(ingredients)
-      .orderBy(asc(ingredients.name));
+    const initialItems = await getIngredients();
 
     return (
       <PageShell

@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { CACHE_KEYS, invalidate } from "@/lib/redis";
 import { mealIngredients, meals } from "@/lib/schema";
 
 type RouteContext = {
@@ -59,6 +60,8 @@ export async function PUT(request: Request, context: RouteContext) {
     await db.insert(mealIngredients).values(ingredientRows);
   }
 
+  await invalidate(CACHE_KEYS.meals);
+
   const ingredients = await db
     .select()
     .from(mealIngredients)
@@ -87,6 +90,7 @@ export async function DELETE(_request: Request, context: RouteContext) {
   }
 
   await db.delete(meals).where(eq(meals.id, mealId));
+  await invalidate(CACHE_KEYS.meals);
 
   return NextResponse.json({ ok: true });
 }

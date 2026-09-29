@@ -1,16 +1,13 @@
-import { asc, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { getIngredients } from "@/lib/queries";
+import { CACHE_KEYS, invalidate } from "@/lib/redis";
 import { ingredients } from "@/lib/schema";
 import { INGREDIENT_CATEGORIES } from "@/lib/types";
 
 export async function GET() {
-  const items = await db
-    .select()
-    .from(ingredients)
-    .orderBy(asc(ingredients.name));
-
-  return NextResponse.json(items);
+  return NextResponse.json(await getIngredients());
 }
 
 export async function POST(request: Request) {
@@ -52,6 +49,8 @@ export async function POST(request: Request) {
       sortOrder: maxOrder + 1,
     })
     .$returningId();
+
+  await invalidate(CACHE_KEYS.ingredients);
 
   const itemId = inserted[0]?.id;
   if (!itemId) {

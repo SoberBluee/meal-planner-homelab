@@ -1,29 +1,16 @@
-import { asc, eq } from "drizzle-orm";
 import ShoppingWizard from "@/components/ShoppingWizard";
 import { PageShell } from "@/components/ui";
-import { db } from "@/lib/db";
 import { renderPageError } from "@/lib/page-error";
-import { essentialItems, mealIngredients, meals } from "@/lib/schema";
+import { getEssentials, getMealsWithIngredients } from "@/lib/queries";
 
 export const dynamic = "force-dynamic";
 
 export default async function ShopNewPage() {
   try {
-    const allMeals = await db.select().from(meals).orderBy(asc(meals.title));
-    const mealsWithIngredients = await Promise.all(
-      allMeals.map(async (meal) => {
-        const ingredients = await db
-          .select()
-          .from(mealIngredients)
-          .where(eq(mealIngredients.mealId, meal.id));
-        return { ...meal, ingredients };
-      }),
-    );
-
-    const essentials = await db
-      .select()
-      .from(essentialItems)
-      .orderBy(asc(essentialItems.sortOrder), asc(essentialItems.name));
+    const [mealsWithIngredients, essentials] = await Promise.all([
+      getMealsWithIngredients(),
+      getEssentials(),
+    ]);
 
     return (
       <PageShell

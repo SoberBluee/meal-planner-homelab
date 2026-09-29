@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { CACHE_KEYS, invalidate } from "@/lib/redis";
 import { ingredients } from "@/lib/schema";
 
 type RouteContext = {
@@ -25,6 +26,7 @@ export async function DELETE(_request: Request, context: RouteContext) {
   }
 
   await db.delete(ingredients).where(eq(ingredients.id, itemId));
+  await invalidate(CACHE_KEYS.ingredients);
 
   return NextResponse.json({ ok: true });
 }

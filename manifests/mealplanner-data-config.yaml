@@ -9,6 +9,8 @@ data:
   MYSQL_USER: "mealplanner"
   MYSQL_PASSWORD: Test@123
   MYSQL_DATABASE: mealplanner
+  REDIS_HOST: mealplanner-redis-hsvc
+  REDIS_PORT: "6379"
 kind: ConfigMap
 metadata:
   name: mealplanner-database-config

@@ -15,7 +15,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Docker Compose (local)
 
-Starts MySQL and the Next.js app with hot reload:
+Starts MySQL, Redis and the Next.js app with hot reload:
 
 ```bash
 docker compose up
@@ -37,6 +37,13 @@ Stop with `Ctrl+C` or `docker compose down`. Add `-v` to `down` if you also want
 | `DB_USER` | MySQL username |
 | `DB_PASSWORD` | MySQL password |
 | `DB_NAME` | MySQL database name |
+| `REDIS_HOST` | Redis host for caching. Leave unset to disable the cache |
+| `REDIS_PORT` | Redis port (default `6379`) |
+| `REDIS_PASSWORD` | Redis password, if your Redis requires auth |
+| `REDIS_DB` | Redis database index (default `0`) |
+| `REDIS_TTL_SECONDS` | Cache expiry in seconds (default `300`) |
+
+Meals, ingredients and essentials reads are cached in Redis and cleared on every write. If Redis is unreachable the app logs a warning and reads MySQL directly.
 
 ## Scripts
 
@@ -61,6 +68,8 @@ For Kubernetes, point the `DB_*` variables at your MySQL StatefulSet service, fo
 - `DB_USER=mealplanner`
 - `DB_PASSWORD=<password>`
 - `DB_NAME=mealplanner`
+
+Point the `REDIS_*` variables at your Redis StatefulSet service, for example `REDIS_HOST=mealplanner-redis-svc`, `REDIS_PORT=6379`, `REDIS_PASSWORD=<password>`.
 
 ## Flow
 
