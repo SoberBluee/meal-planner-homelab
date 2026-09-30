@@ -193,6 +193,22 @@ export default function ShoppingWizard({
       }),
     };
     sessionStorage.setItem(SHOPPING_DRAFT_KEY, JSON.stringify(draft));
+
+    const weekDaysWithMeals = weekPlan.filter((day) => day.mealId !== null).length;
+    void fetch("/api/log", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "shop.trip.complete",
+        selectedMealCount: selectedMealIds.length,
+        checkedEssentialsCount: checkedEssentials.length,
+        extraEssentialsCount: extraEssentials.length,
+        weekDaysWithMeals,
+        mergedLineCount: mergedList.length,
+        mealCost,
+      }),
+    });
+
     router.push("/shop/complete");
   }
 

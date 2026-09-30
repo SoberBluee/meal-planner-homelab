@@ -42,6 +42,8 @@ Stop with `Ctrl+C` or `docker compose down`. Add `-v` to `down` if you also want
 | `REDIS_PASSWORD` | Redis password, if your Redis requires auth |
 | `REDIS_DB` | Redis database index (default `0`) |
 | `REDIS_TTL_SECONDS` | Cache expiry in seconds (default `300`) |
+| `LOG_DIR` | Directory for daily access logs (default `/var/log/mealplanner`). Files are named `access-YYYY-MM-DD.log` (UTC date) |
+| `LOG_LEVEL` | Pino log level (default `info`) |
 
 Meals, ingredients and essentials reads are cached in Redis and cleared on every write. If Redis is unreachable the app logs a warning and reads MySQL directly.
 

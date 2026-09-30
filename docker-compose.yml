@@ -41,6 +41,7 @@ services:
     ports:
       - "3000:3000"
     environment:
+      LOG_DIR: /app/logs/mealplanner
       APP_PIN: "1234"
       AUTH_SECRET: change-this-to-a-long-random-string
       COOKIE_SECURE: "false"
@@ -57,6 +58,7 @@ services:
     volumes:
       - .:/app
       - app_node_modules:/app/node_modules
+      - ./logs/mealplanner:/app/logs/mealplanner
     command: >
       sh -c "npm ci && npm run db:push && npm run dev -- -H 0.0.0.0 -p 3000"
 

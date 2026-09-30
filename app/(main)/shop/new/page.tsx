@@ -1,5 +1,6 @@
 import ShoppingWizard from "@/components/ShoppingWizard";
 import { PageShell } from "@/components/ui";
+import { logPageView } from "@/lib/log-page-view";
 import { renderPageError } from "@/lib/page-error";
 import { getEssentials, getMealsWithIngredients } from "@/lib/queries";
 
@@ -11,6 +12,14 @@ export default async function ShopNewPage() {
       getMealsWithIngredients(),
       getEssentials(),
     ]);
+
+    logPageView("/shop/new", {
+      action: "page.shop.new",
+      extra: {
+        mealCount: mealsWithIngredients.length,
+        essentialCount: essentials.length,
+      },
+    });
 
     return (
       <PageShell

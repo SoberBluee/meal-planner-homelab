@@ -1,5 +1,6 @@
 import { ServerErrorView } from "@/components/ServerErrorView";
-import { formatErrorMessage, logServerError } from "@/lib/errors";
+import { formatErrorMessage } from "@/lib/errors";
+import { logServerError } from "@/lib/log-server-error";
 
 export function renderPageError(error: unknown, context: string) {
   logServerError(error, context);

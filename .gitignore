@@ -40,6 +40,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# local access logs
+/logs/
+
 # local database files
 /data/
 *.db

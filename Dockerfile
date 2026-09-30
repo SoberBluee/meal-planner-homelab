@@ -16,7 +16,9 @@ FROM node:20-bookworm-slim as runner
 WORKDIR /app
 
 # set the environment variables
-ENV NODE_ENV=production HOSTNAME=0.0.0.0 PORT=3000
+ENV NODE_ENV=production HOSTNAME=0.0.0.0 PORT=3000 LOG_DIR=/var/log/mealplanner
+
+RUN mkdir -p /var/log/mealplanner && chown node:node /var/log/mealplanner
 
 # copy the standalon build from the build stage
 COPY --from=build --chown=node:node /app/.next/standalone ./

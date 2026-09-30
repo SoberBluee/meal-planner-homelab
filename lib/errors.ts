@@ -44,9 +44,3 @@ export function formatErrorMessage(error: unknown): string {
 
   return parts.join("\n") || "Unknown error";
 }
-
-export function logServerError(error: unknown, context?: string): void {
-  const prefix = context ? `[server error] ${context}` : "[server error]";
-  console.error(prefix, formatErrorMessage(error));
-  console.error(error);
-}

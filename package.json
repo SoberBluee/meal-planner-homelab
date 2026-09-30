@@ -17,8 +17,11 @@
     "ioredis": "^6.0.0",
     "mysql2": "^3.24.1",
     "next": "16.3.2",
+    "pino": "^10.3.1",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "server-only": "^0.0.1",
+    "sonic-boom": "^5.0.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -31,5 +34,8 @@
     "tailwindcss": "^4",
     "tsx": "^4.23.12",
     "typescript": "^5"
+  },
+  "optionalDependencies": {
+    "@tailwindcss/oxide-darwin-arm64": "^4.3.3"
   }
 }

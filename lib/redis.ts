@@ -1,4 +1,5 @@
 import Redis from "ioredis";
+import { logAction } from "@/lib/logger";
 
 export const CACHE_KEYS = {
   meals: "mealplanner:meals",
@@ -29,7 +30,15 @@ function getRedis(): Redis | null {
   });
 
   redisInstance.on("error", (error) => {
-    console.warn("[redis]", error.message);
+    logAction(
+      {
+        action: "redis.error",
+        outcome: "failure",
+        summary: "Redis connection error",
+        message: error.message,
+      },
+      "warn",
+    );
   });
 
   return redisInstance;
@@ -52,7 +61,16 @@ export async function cached<T>(key: string, loader: () => Promise<T>): Promise<
       return JSON.parse(hit) as T;
     }
   } catch (error) {
-    console.warn(`[redis] get ${key} failed, falling back to MySQL:`, (error as Error).message);
+    logAction(
+      {
+        action: "redis.cache_miss_fallback",
+        outcome: "failure",
+        summary: `Redis get failed for ${key}, loading from MySQL`,
+        cacheKey: key,
+        message: (error as Error).message,
+      },
+      "warn",
+    );
   }
 
   const value = await loader();
@@ -60,7 +78,16 @@ export async function cached<T>(key: string, loader: () => Promise<T>): Promise<
   try {
     await redis.set(key, JSON.stringify(value), "EX", ttlSeconds());
   } catch (error) {
-    console.warn(`[redis] set ${key} failed:`, (error as Error).message);
+    logAction(
+      {
+        action: "redis.cache_set_failed",
+        outcome: "failure",
+        summary: `Redis set failed for ${key}`,
+        cacheKey: key,
+        message: (error as Error).message,
+      },
+      "warn",
+    );
   }
 
   return value;
@@ -75,6 +102,15 @@ export async function invalidate(...keys: string[]): Promise<void> {
   try {
     await redis.del(...keys);
   } catch (error) {
-    console.warn(`[redis] del ${keys.join(", ")} failed:`, (error as Error).message);
+    logAction(
+      {
+        action: "redis.invalidate_failed",
+        outcome: "failure",
+        summary: `Redis del failed for ${keys.join(", ")}`,
+        cacheKeys: keys,
+        message: (error as Error).message,
+      },
+      "warn",
+    );
   }
 }
