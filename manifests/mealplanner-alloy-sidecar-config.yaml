@@ -6,7 +6,7 @@ metadata:
 data:
   alloy-sidecar.yaml: |
     local.file_match "tmplogs" {
-      path_targets = [{"__path__" = "/var/log/mealplanner"}]
+      path_targets = [{"__path__" = "/var/log/mealplanner/*.log"}]
     }
 
     loki.source.file "local_files" {
@@ -16,7 +16,7 @@ data:
 
     loki.write "local_loki" {
         endpoint {
-            url = "http://loki-gateway.default.svc.cluster.local:3100/loki/api/v1/push"
+            url = "http://loki-gateway.default.svc.cluster.local/loki/api/v1/push"
             tenant_id = "1"
         }
     }
