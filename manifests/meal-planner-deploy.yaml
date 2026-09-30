@@ -17,7 +17,7 @@ spec:
         app: meal-planner-app
     spec:
       containers:
-      - image: soberblue/mealplanner:1.4.1
+      - image: soberblue/mealplanner:1.5.0
         name: mealplanner
         ports:
         - containerPort: 3000

@@ -2,6 +2,8 @@ apiVersion: v1
 data:
   REDIS_HOST: mealplanner-redis-hsvc
   REDIS_PORT: "6379"
+  LOG_DIR: /var/log/mealplanner
+  LOG_LEVEL: info
 kind: ConfigMap
 metadata:
   name: mealplanner-configmap
