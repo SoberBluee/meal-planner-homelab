@@ -23,16 +23,22 @@ spec:
         - containerPort: 3000
         resources: 
           requests:
-            cpu: 1
-            memory: 1Gi
+            cpu: 500m
+            memory: 500Mi
           limits:
-            cpu: 2
-            memory: 2Gi
+            cpu: 500m
+            memory: 500Mi
         envFrom:
         - configMapRef: 
             name: mealplanner-database-config
         - configMapRef: 
             name: mealplanner-configmap
+        env:
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mealplanner-redis-secret
+              key: REDIS_PASSWORD
 status: {}
 
 
