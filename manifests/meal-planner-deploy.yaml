@@ -16,11 +16,20 @@ spec:
       labels:
         app: meal-planner-app
     spec:
+      volumes:
+      - name: log-dir
+        emptyDir: {}
+      - name: alloy-config
+        configMap:
+          name: mealplanner-alloy-sidecar
       containers:
       - image: soberblue/mealplanner:1.5.0
         name: mealplanner
         ports:
         - containerPort: 3000
+        volumeMounts:
+        - name: log-dir
+          mountPath: /var/log/mealplanner
         resources: 
           requests:
             cpu: 500m
@@ -39,6 +48,17 @@ spec:
             secretKeyRef:
               name: mealplanner-redis-secret
               key: REDIS_PASSWORD
+      - image: grafana/alloy:latest
+        name: alloy
+        args:
+          - "run"
+          - "/etc/alloy/alloy-sidecar.yaml"
+        volumeMounts:
+        - name: alloy-config
+          mountPath: /etc/alloy/
+        - name: log-dir
+          mountPath: /var/log/mealplanner
+    
 status: {}
 
 
