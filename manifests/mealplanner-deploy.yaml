@@ -51,7 +51,7 @@ spec:
         # checks when the pod has finished starting
         startupProbe:
           httpGet:
-            path: /health
+            path: /api/health
             port: 3000
           failureThreshold: 30
           periodSeconds: 10
