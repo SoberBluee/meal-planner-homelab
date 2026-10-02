@@ -69,7 +69,7 @@ spec:
           failureThreshold: 5 #how many times the pod can fail before marking as unready
           periodSeconds: 30 #how often to probe the pod
           httpGet:
-            path: /ready
+            path: /api/ready
             port: 3000
       # export logs to grafana
       - image: grafana/alloy:latest
