@@ -48,6 +48,30 @@ spec:
             secretKeyRef:
               name: mealplanner-redis-secret
               key: REDIS_PASSWORD
+        # checks when the pod has finished starting
+        startupProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          failureThreshold: 30
+          periodSeconds: 10
+        #  checks when pod is failing and will restart
+        livenessProbe:
+          timeoutSeconds: 3
+          failureThreshold: 3
+          periodSeconds: 15
+          terminationGracePeriodSeconds: 10
+          httpGet:
+            path: /api/health
+            port: 3000
+        # checks when pod is broken and will mark as unready 
+        readinessProbe:
+          failureThreshold: 5 #how many times the pod can fail before marking as unready
+          periodSeconds: 30 #how often to probe the pod
+          httpGet:
+            path: /api/ready
+            port: 3000
+      # export logs to grafana
       - image: grafana/alloy:latest
         name: alloy
         args:
