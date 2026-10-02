@@ -63,7 +63,7 @@ spec:
           terminationGracePeriodSeconds: 10
           httpGet:
             path: /api/health
-            port: 3000
+            port: 3001
         # checks when pod is broken and will mark as unready 
         readinessProbe:
           failureThreshold: 5 #how many times the pod can fail before marking as unready
