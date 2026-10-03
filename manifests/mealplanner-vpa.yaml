@@ -1,0 +1,11 @@
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: mealplanner-vpa
+spec:
+  targetRef:
+    apiVersion: "apps/v1"
+    kind: Deployment
+    name: meal-planner-app
+  updatePolicy:
+    updateMode: "Off"
