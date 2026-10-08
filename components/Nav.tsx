@@ -17,7 +17,7 @@ export default function Nav() {
 
   return (
     <header className="sticky top-0 z-10 border-b border-border bg-background">
-      <div className="mx-auto flex max-w-2xl flex-col items-start gap-3 px-5 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex w-full flex-col items-start gap-3 px-5 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
         <Link
           href="/shop/new"
           className="font-serif text-xl font-medium tracking-tight"

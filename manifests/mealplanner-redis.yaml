@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mealplanner-redis
+  namespace: mealplanner
+  labels:
+    app: mealplanner-redis
+spec:
+  selector:
+    matchLabels:
+      app: mealplanner-redis
+  serviceName: "nginx"
+  replicas: 1
+  minReadySeconds: 10 # by default is 0
+  template:
+    metadata:
+      labels:
+        app: mealplanner-redis
+    spec:
+      terminationGracePeriodSeconds: 10
+      securityContext:
+        fsGroup: 1001
+      containers:
+      - name: redis
+        image: bitnami/redis:latest
+        ports:
+        - containerPort: 6379
+          name: redis
+        resources:
+          requests:
+            cpu: 500m
+            memory: 5M
+          limits:
+            cpu: 2
+            memory: 500M
+        env:
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: REDIS_PASSWORD
+              name: mealplanner-redis-secret
+        - name: REDIS_EXTRA_FLAGS
+          value: "--requirepass $(REDIS_PASSWORD)"
+        volumeMounts:
+        - name: redis-tmp-conf
+          mountPath: /opt/bitnami/redis/etc
+        - name: redis-conf
+          mountPath: /opt/bitnami/redis/mounted-etc/redis.conf
+          subPath: redis.conf
+        - name: redis-data
+          mountPath: /bitnami/redis/data
+      volumes:
+      - name: redis-tmp-conf
+        emptyDir: {}
+      - name: redis-conf
+        configMap:
+          name: mealplanner-redis-configmap
+      - name: redis-data
+        persistentVolumeClaim:
+          claimName: mealplanner-redis-pvc

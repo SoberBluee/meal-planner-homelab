@@ -40,6 +40,7 @@ export default async function ShopNewPage() {
     <PageShell
       title="New trip"
       subtitle="Pick meals, schedule the week, confirm essentials, export your list."
+      width="wide"
     >
       <ShoppingWizard
         meals={mealsWithIngredients}

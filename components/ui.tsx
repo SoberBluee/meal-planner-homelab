@@ -5,14 +5,20 @@ import type { ReactNode } from "react";
 export function PageShell({
   title,
   subtitle,
+  width = "default",
   children,
 }: {
   title: string;
   subtitle?: string;
+  width?: "default" | "wide";
   children: ReactNode;
 }) {
   return (
-    <main className="mx-auto max-w-2xl px-5 py-10 sm:px-6 sm:py-14">
+    <main
+      className={`mx-auto px-5 py-10 sm:px-6 sm:py-14 ${
+        width === "wide" ? "max-w-5xl" : "max-w-2xl"
+      }`}
+    >
       <header className="mb-10">
         <h1 className="font-serif text-3xl font-medium tracking-tight sm:text-4xl">
           {title}

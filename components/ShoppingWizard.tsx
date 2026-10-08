@@ -1,18 +1,6 @@
 "use client";
 
-/* eslint-disable react-hooks/refs -- dnd-kit exposes reactive drag state through refs */
-
-import { useMemo, useState } from "react";
-import {
-  DndContext,
-  KeyboardSensor,
-  PointerSensor,
-  useDraggable,
-  useDroppable,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-} from "@dnd-kit/core";
+import { useMemo, useState, type DragEvent } from "react";
 import { useRouter } from "next/navigation";
 import {
   formatShoppingListText,
@@ -50,29 +38,24 @@ function emptyWeekPlan(): WeekPlanDay[] {
   }));
 }
 
+const MEAL_DRAG_TYPE = "application/x-meal-id";
+
 function DraggableMeal({ meal }: { meal: MealWithIngredients }) {
-  const drag = useDraggable({ id: `meal-${meal.id}` });
   return (
-    <button
-      ref={drag.setNodeRef}
-      type="button"
-      style={{
-        transform: drag.transform
-          ? `translate3d(${drag.transform.x}px, ${drag.transform.y}px, 0)`
-          : undefined,
+    <div
+      draggable
+      onDragStart={(event) => {
+        event.dataTransfer.setData(MEAL_DRAG_TYPE, String(meal.id));
+        event.dataTransfer.effectAllowed = "move";
       }}
-      className={`w-full touch-none rounded-xl border border-border bg-surface p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-accent/50 hover:shadow-md ${
-        drag.isDragging ? "z-30 opacity-60 shadow-xl" : ""
-      }`}
-      {...drag.attributes}
-      {...drag.listeners}
+      className="cursor-grab rounded-full border border-border bg-surface px-4 py-2 text-sm active:cursor-grabbing"
     >
-      <p className="font-medium">{meal.title}</p>
-      <p className="mt-1 text-xs text-muted">
+      <span className="font-medium">{meal.title}</span>
+      <span className="ml-2 text-xs text-muted">
         {meal.ingredients.length} ingredients
         {meal.price != null ? ` · £${meal.price.toFixed(2)}` : ""}
-      </p>
-    </button>
+      </span>
+    </div>
   );
 }
 
@@ -80,6 +63,8 @@ function DayDropZone({
   entry,
   people,
   availableMeals,
+  isOver,
+  onDragOverChange,
   onAssign,
   onClear,
   onCooker,
@@ -87,23 +72,46 @@ function DayDropZone({
   entry: WeekPlanDay;
   people: PersonRecord[];
   availableMeals: MealWithIngredients[];
+  isOver: boolean;
+  onDragOverChange: (over: boolean) => void;
   onAssign: (mealId: number) => void;
   onClear: () => void;
   onCooker: (personId: number | null) => void;
 }) {
-  const drop = useDroppable({ id: `day-${entry.day}` });
+  function acceptsMeal(event: DragEvent) {
+    return event.dataTransfer.types.includes(MEAL_DRAG_TYPE);
+  }
+
   return (
     <article
-      ref={drop.setNodeRef}
-      className={`relative min-h-44 overflow-visible rounded-2xl border p-4 transition ${
-        drop.isOver
-          ? "border-accent bg-accent/10 shadow-lg"
+      onDragOver={(event) => {
+        if (!acceptsMeal(event)) return;
+        event.preventDefault();
+        event.dataTransfer.dropEffect = "move";
+      }}
+      onDragEnter={(event) => {
+        if (acceptsMeal(event)) onDragOverChange(true);
+      }}
+      onDragLeave={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+          onDragOverChange(false);
+        }
+      }}
+      onDrop={(event) => {
+        event.preventDefault();
+        onDragOverChange(false);
+        const mealId = Number(event.dataTransfer.getData(MEAL_DRAG_TYPE));
+        if (mealId) onAssign(mealId);
+      }}
+      className={`flex min-h-36 flex-col gap-3 rounded-2xl border p-4 ${
+        isOver
+          ? "border-accent bg-accent/10"
           : entry.mealId != null
-            ? "border-accent/30 bg-surface shadow-sm"
+            ? "border-accent/30 bg-surface"
             : "border-dashed border-border bg-background"
       }`}
     >
-      <div className="mb-3 flex items-center justify-between gap-2">
+      <div className="flex items-center justify-between gap-2">
         <span className="font-serif text-lg font-medium">{entry.day}</span>
         {entry.mealId != null ? (
           <Button type="button" variant="ghost" size="sm" onClick={onClear}>
@@ -111,11 +119,38 @@ function DayDropZone({
           </Button>
         ) : null}
       </div>
-      {entry.mealTitle ? (
-        <div className="space-y-3">
-          <div className="rounded-xl bg-accent/10 px-3 py-2">
-            <p className="font-medium text-accent">{entry.mealTitle}</p>
+
+      <div>
+        {entry.mealTitle ? (
+          <span className="inline-block rounded-xl bg-accent/10 px-3 py-2 font-medium text-accent">
+            {entry.mealTitle}
+          </span>
+        ) : (
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <span className="text-sm text-muted">Drop a meal here</span>
+            {availableMeals.length > 0 ? (
+              <select
+                value=""
+                onChange={(event) => {
+                  if (event.target.value) onAssign(Number(event.target.value));
+                }}
+                className="rounded-lg border border-border bg-surface px-3 py-2 text-sm sm:max-w-56"
+                aria-label={`Assign meal to ${entry.day}`}
+              >
+                <option value="">Or choose a meal…</option>
+                {availableMeals.map((meal) => (
+                  <option key={meal.id} value={meal.id}>
+                    {meal.title}
+                  </option>
+                ))}
+              </select>
+            ) : null}
           </div>
+        )}
+      </div>
+
+      <div>
+        {entry.mealTitle ? (
           <SearchableSelect
             options={[
               { value: "", label: "No cook assigned" },
@@ -128,29 +163,8 @@ function DayDropZone({
             onChange={(value) => onCooker(value ? Number(value) : null)}
             placeholder="Choose cook…"
           />
-        </div>
-      ) : (
-        <div className="space-y-3">
-          <p className="text-sm text-muted">Drop a meal here</p>
-          {availableMeals.length > 0 ? (
-            <select
-              value=""
-              onChange={(event) => {
-                if (event.target.value) onAssign(Number(event.target.value));
-              }}
-              className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm"
-              aria-label={`Assign meal to ${entry.day}`}
-            >
-              <option value="">Or choose a meal…</option>
-              {availableMeals.map((meal) => (
-                <option key={meal.id} value={meal.id}>
-                  {meal.title}
-                </option>
-              ))}
-            </select>
-          ) : null}
-        </div>
-      )}
+        ) : null}
+      </div>
     </article>
   );
 }
@@ -170,10 +184,7 @@ export default function ShoppingWizard({
   const [step, setStep] = useState<WizardStep>("meals");
   const [selectedMealIds, setSelectedMealIds] = useState<number[]>([]);
   const [weekPlan, setWeekPlan] = useState<WeekPlanDay[]>(emptyWeekPlan);
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
-    useSensor(KeyboardSensor),
-  );
+  const [dragOverDay, setDragOverDay] = useState<Weekday | null>(null);
   const [checkedEssentials, setCheckedEssentials] = useState<string[]>(
     essentials.map((item) => item.name),
   );
@@ -311,15 +322,6 @@ export default function ShoppingWizard({
     );
   }
 
-  function onScheduleDragEnd(event: DragEndEvent) {
-    const active = String(event.active.id);
-    const over = event.over ? String(event.over.id) : "";
-    if (!active.startsWith("meal-") || !over.startsWith("day-")) return;
-    const mealId = Number(active.replace("meal-", ""));
-    const day = over.replace("day-", "") as Weekday;
-    assignMealToDay(day, mealId);
-  }
-
   function toggleEssential(name: string) {
     setCheckedEssentials((current) =>
       current.includes(name)
@@ -376,7 +378,7 @@ export default function ShoppingWizard({
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex max-w-2xl flex-wrap items-center gap-2">
         {steps.map((item, index) => (
           <div key={item.id} className="flex items-center gap-2">
             <button
@@ -400,7 +402,7 @@ export default function ShoppingWizard({
       </div>
 
       {step === "meals" ? (
-        <section className="space-y-6">
+        <section className="max-w-2xl space-y-6">
           {meals.length === 0 ? (
             <EmptyState>
               No meals saved yet. Add some on the Meals page first.
@@ -459,45 +461,49 @@ export default function ShoppingWizard({
               No meals selected. Go back and choose meals for this trip.
             </EmptyState>
           ) : (
-            <DndContext sensors={sensors} onDragEnd={onScheduleDragEnd}>
-              <div className="grid gap-6 xl:grid-cols-[minmax(0,16rem)_1fr]">
-                <aside className="rounded-2xl border border-border bg-background p-4">
-                  <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-muted">
-                    Available meals
-                  </h2>
-                  {availableMeals.length === 0 ? (
-                    <p className="rounded-xl border border-dashed border-border p-4 text-sm text-muted">
-                      Every selected meal has been assigned.
-                    </p>
-                  ) : (
-                    <div className="space-y-3">
-                      {availableMeals.map((meal) => (
-                        <DraggableMeal key={meal.id} meal={meal} />
-                      ))}
-                    </div>
-                  )}
-                </aside>
-
-                <div>
-                  <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-muted">
-                    This week
-                  </h2>
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    {weekPlan.map((entry) => (
-                      <DayDropZone
-                        key={entry.day}
-                        entry={entry}
-                        people={people}
-                        availableMeals={availableMeals}
-                        onAssign={(mealId) => assignMealToDay(entry.day, mealId)}
-                        onClear={() => clearDay(entry.day)}
-                        onCooker={(personId) => assignCooker(entry.day, personId)}
-                      />
+            <div className="space-y-6">
+              <div className="rounded-2xl border border-border bg-background p-4">
+                <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-muted">
+                  Available meals
+                </h2>
+                {availableMeals.length === 0 ? (
+                  <p className="rounded-xl border border-dashed border-border p-4 text-sm text-muted">
+                    Every selected meal has been assigned.
+                  </p>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {availableMeals.map((meal) => (
+                      <DraggableMeal key={meal.id} meal={meal} />
                     ))}
                   </div>
+                )}
+              </div>
+
+              <div>
+                <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-muted">
+                  This week
+                </h2>
+                <div className="grid gap-3 md:grid-cols-2">
+                  {weekPlan.map((entry) => (
+                    <DayDropZone
+                      key={entry.day}
+                      entry={entry}
+                      people={people}
+                      availableMeals={availableMeals}
+                      isOver={dragOverDay === entry.day}
+                      onDragOverChange={(over) =>
+                        setDragOverDay((current) =>
+                          over ? entry.day : current === entry.day ? null : current,
+                        )
+                      }
+                      onAssign={(mealId) => assignMealToDay(entry.day, mealId)}
+                      onClear={() => clearDay(entry.day)}
+                      onCooker={(personId) => assignCooker(entry.day, personId)}
+                    />
+                  ))}
                 </div>
               </div>
-            </DndContext>
+            </div>
           )}
 
           {mealCost != null ? (
@@ -529,7 +535,7 @@ export default function ShoppingWizard({
       ) : null}
 
       {step === "essentials" ? (
-        <section className="space-y-6">
+        <section className="max-w-2xl space-y-6">
           <p className="text-sm text-muted">
             Your usual staples are pre-selected. Uncheck or add extras for this
             week.
@@ -617,7 +623,7 @@ export default function ShoppingWizard({
       ) : null}
 
       {step === "review" ? (
-        <section className="space-y-6">
+        <section className="max-w-2xl space-y-6">
           <div>
             <h2 className="mb-3 text-sm font-medium text-muted">This week</h2>
             <ListShell>

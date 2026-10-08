@@ -1,0 +1,21 @@
+apiVersion: v1
+data:
+  redis.conf: |
+    # General (foreground for K8s)
+    bind 0.0.0.0
+    port 6379
+    daemonize no
+    supervised no
+    loglevel notice
+    logfile ""
+    databases 16
+    # Cache only: no writes to disk
+    save ""
+    appendonly no
+    # Memory (keep below the pod memory limit)
+    maxmemory 200mb
+    maxmemory-policy allkeys-lru
+kind: ConfigMap
+metadata:
+  name: mealplanner-redis-configmap
+  namespace: mealplanner
