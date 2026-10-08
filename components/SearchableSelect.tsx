@@ -53,14 +53,9 @@ export default function SearchableSelect({
 
   useEffect(() => {
     if (open) {
-      setHighlight(0);
       window.requestAnimationFrame(() => searchRef.current?.focus());
     }
   }, [open]);
-
-  useEffect(() => {
-    setHighlight(0);
-  }, [query]);
 
   function selectOption(next: string) {
     onChange(next);
@@ -113,7 +108,10 @@ export default function SearchableSelect({
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-controls={listId}
-        onClick={() => setOpen((current) => !current)}
+        onClick={() => {
+          setHighlight(0);
+          setOpen((current) => !current);
+        }}
         onKeyDown={onTriggerKeyDown}
         className="flex w-full items-center justify-between rounded-lg border border-border bg-surface px-3.5 py-2.5 text-left text-sm outline-none transition-colors focus:border-accent focus:ring-2 focus:ring-accent/15"
       >
@@ -142,7 +140,10 @@ export default function SearchableSelect({
               ref={searchRef}
               type="search"
               value={query}
-              onChange={(event) => setQuery(event.target.value)}
+              onChange={(event) => {
+                setQuery(event.target.value);
+                setHighlight(0);
+              }}
               onKeyDown={onSearchKeyDown}
               placeholder="Search…"
               className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none placeholder:text-muted/60 focus:border-accent focus:ring-2 focus:ring-accent/15"

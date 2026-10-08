@@ -33,6 +33,23 @@ export type IngredientRecord = {
   price: number | null;
 };
 
+export type ShopSectionRecord = {
+  id: number;
+  name: string;
+  sortOrder: number;
+};
+
+export type ShopLayout = {
+  sections: ShopSectionRecord[];
+  ingredients: IngredientRecord[];
+};
+
+export type PersonRecord = {
+  id: number;
+  name: string;
+  sortOrder: number;
+};
+
 export const INGREDIENT_CATEGORIES = [
   "Fruit",
   "Vegetable",
@@ -63,6 +80,8 @@ export type WeekPlanDay = {
   day: Weekday;
   mealId: number | null;
   mealTitle: string | null;
+  cookerId: number | null;
+  cookerName: string | null;
 };
 
 export type ShoppingDraft = {
@@ -76,6 +95,9 @@ export type ShoppingDraft = {
     quantity?: number;
     unit?: string;
     display: string;
+    sectionName?: string;
+    sectionOrder?: number;
+    itemOrder?: number;
   }>;
   listText: string;
 };

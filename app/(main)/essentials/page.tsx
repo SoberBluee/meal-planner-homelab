@@ -7,22 +7,23 @@ import { getEssentials } from "@/lib/queries";
 export const dynamic = "force-dynamic";
 
 export default async function EssentialsPage() {
+  let initialItems;
   try {
-    const initialItems = await getEssentials();
+    initialItems = await getEssentials();
     logPageView("/essentials", {
       action: "page.essentials.view",
       extra: { essentialCount: initialItems.length },
     });
-
-    return (
-      <PageShell
-        title="Essentials"
-        subtitle="Staples that pre-fill every shopping trip."
-      >
-        <EssentialsList initialItems={initialItems} />
-      </PageShell>
-    );
   } catch (error) {
     return renderPageError(error, "/essentials");
   }
+
+  return (
+    <PageShell
+      title="Essentials"
+      subtitle="Staples that pre-fill every shopping trip."
+    >
+      <EssentialsList initialItems={initialItems} />
+    </PageShell>
+  );
 }

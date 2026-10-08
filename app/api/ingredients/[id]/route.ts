@@ -33,7 +33,7 @@ export async function DELETE(request: Request, context: RouteContext) {
       }
 
       await db.delete(ingredients).where(eq(ingredients.id, itemId));
-      await invalidate(CACHE_KEYS.ingredients);
+      await invalidate(CACHE_KEYS.ingredients, CACHE_KEYS.shopLayout);
 
       logAction({
         action: "ingredient.delete",

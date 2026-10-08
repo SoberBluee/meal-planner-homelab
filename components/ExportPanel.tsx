@@ -14,7 +14,7 @@ export default function ExportPanel() {
   useEffect(() => {
     const raw = sessionStorage.getItem(SHOPPING_DRAFT_KEY);
     if (!raw) return;
-    setDraft(JSON.parse(raw) as ShoppingDraft);
+    queueMicrotask(() => setDraft(JSON.parse(raw) as ShoppingDraft));
   }, []);
 
   async function copyList() {

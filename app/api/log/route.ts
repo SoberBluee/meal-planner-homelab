@@ -24,15 +24,16 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Unknown or missing action" }, { status: 400 });
       }
 
-      const { action: _action, ...rest } = body;
-      const metadata = sanitizeForLog(rest) as Record<string, unknown>;
+      const metadata = { ...body };
+      delete metadata.action;
+      const sanitizedMetadata = sanitizeForLog(metadata) as Record<string, unknown>;
 
       logAction({
         action,
         outcome: "success",
-        summary: clientEventSummary(action, metadata),
+        summary: clientEventSummary(action, sanitizedMetadata),
         source: "client",
-        ...metadata,
+        ...sanitizedMetadata,
       });
 
       return new NextResponse(null, { status: 204 });

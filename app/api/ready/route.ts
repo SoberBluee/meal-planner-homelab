@@ -7,7 +7,7 @@ export async function GET() {
     try {
         await db.select().from(meals).limit(1);
         return NextResponse.json({ status: "ok" });
-    } catch (error) {
+    } catch {
         return NextResponse.json({ status: "error" }, { status: 500 });
     }
 }

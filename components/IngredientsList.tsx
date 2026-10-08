@@ -1,10 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  INGREDIENT_CATEGORIES,
-  type IngredientRecord,
-} from "@/lib/types";
+import type { IngredientRecord, ShopSectionRecord } from "@/lib/types";
 import {
   Button,
   EmptyState,
@@ -16,14 +13,14 @@ import {
 
 export default function IngredientsList({
   initialItems,
+  sections,
 }: {
   initialItems: IngredientRecord[];
+  sections: ShopSectionRecord[];
 }) {
   const [items, setItems] = useState(initialItems);
   const [newName, setNewName] = useState("");
-  const [newCategory, setNewCategory] = useState<string>(
-    INGREDIENT_CATEGORIES[0],
-  );
+  const [newCategory, setNewCategory] = useState(sections[0]?.name ?? "");
   const [newPrice, setNewPrice] = useState("");
   const [error, setError] = useState("");
 
@@ -46,11 +43,7 @@ export default function IngredientsList({
       setError("Name is required");
       return;
     }
-    if (
-      !INGREDIENT_CATEGORIES.includes(
-        newCategory as (typeof INGREDIENT_CATEGORIES)[number],
-      )
-    ) {
+    if (!sections.some((section) => section.name === newCategory)) {
       setError("Pick a category");
       return;
     }
@@ -72,7 +65,7 @@ export default function IngredientsList({
     }
 
     setNewName("");
-    setNewCategory(INGREDIENT_CATEGORIES[0]);
+    setNewCategory(sections[0]?.name ?? "");
     setNewPrice("");
     await refreshItems();
   }
@@ -104,9 +97,9 @@ export default function IngredientsList({
               value={newCategory}
               onChange={(event) => setNewCategory(event.target.value)}
             >
-              {INGREDIENT_CATEGORIES.map((category) => (
-                <option key={category} value={category}>
-                  {category}
+              {sections.map((section) => (
+                <option key={section.id} value={section.name}>
+                  {section.name}
                 </option>
               ))}
             </Select>

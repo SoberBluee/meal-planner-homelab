@@ -3,10 +3,9 @@ import { NextResponse } from "next/server";
 import { handleRoute } from "@/lib/api-error";
 import { db } from "@/lib/db";
 import { logAction } from "@/lib/logger";
-import { getIngredients } from "@/lib/queries";
+import { getIngredients, getShopLayout } from "@/lib/queries";
 import { CACHE_KEYS, invalidate } from "@/lib/redis";
 import { ingredients } from "@/lib/schema";
-import { INGREDIENT_CATEGORIES } from "@/lib/types";
 
 export async function GET(request: Request) {
   return handleRoute(
@@ -44,17 +43,15 @@ export async function POST(request: Request) {
       }
 
       const category = body.category?.trim();
-      if (
-        !category ||
-        !INGREDIENT_CATEGORIES.includes(
-          category as (typeof INGREDIENT_CATEGORIES)[number],
-        )
-      ) {
+      const layout = await getShopLayout();
+      if (!category || !layout.sections.some((section) => section.name === category)) {
         return NextResponse.json({ error: "Category is required" }, { status: 400 });
       }
 
       const existing = await db.select().from(ingredients);
-      const maxOrder = existing.reduce(
+      const maxOrder = existing
+        .filter((item) => item.category === category)
+        .reduce(
         (max, item) => Math.max(max, item.sortOrder),
         -1,
       );
@@ -70,7 +67,7 @@ export async function POST(request: Request) {
         })
         .$returningId();
 
-      await invalidate(CACHE_KEYS.ingredients);
+      await invalidate(CACHE_KEYS.ingredients, CACHE_KEYS.shopLayout);
 
       const itemId = inserted[0]?.id;
       if (!itemId) {

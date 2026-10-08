@@ -30,7 +30,6 @@ export type LogActionFields = {
 };
 
 declare global {
-  // eslint-disable-next-line no-var
   var __mealPlannerLogger: Logger | undefined;
 }
 
