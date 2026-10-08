@@ -23,7 +23,7 @@ spec:
         configMap:
           name: mealplanner-alloy-sidecar
       containers:
-      - image: soberblue/mealplanner:1.7.0
+      - image: soberblue/mealplanner:1.7.1
         name: mealplanner
         ports:
         - containerPort: 3000
@@ -86,4 +86,4 @@ spec:
 status: {}
 
 
-# docker buildx build --platform linux/amd64 -t soberblue/mealplanner:1.6.0 --push .
+# docker buildx build --platform linux/amd64 -t soberblue/mealplanner:1.7.1 --push .
