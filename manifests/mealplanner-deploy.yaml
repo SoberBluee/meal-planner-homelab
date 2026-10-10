@@ -23,7 +23,7 @@ spec:
         configMap:
           name: mealplanner-alloy-sidecar
       containers:
-      - image: soberblue/mealplanner:1.7.1
+      - image: soberblue/mealplanner:1.7.2
         name: mealplanner
         ports:
         - containerPort: 3000
