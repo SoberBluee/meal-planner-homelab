@@ -7,6 +7,8 @@ export const CACHE_KEYS = {
   essentials: "mealplanner:essentials",
   shopLayout: "mealplanner:shop-layout",
   people: "mealplanner:people",
+  deletedMeals: "mealplanner:deleted-meals",
+  trips: "mealplanner:trips",
 } as const;
 
 let redisInstance: Redis | null = null;

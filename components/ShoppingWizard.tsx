@@ -185,6 +185,7 @@ export default function ShoppingWizard({
   const [selectedMealIds, setSelectedMealIds] = useState<number[]>([]);
   const [weekPlan, setWeekPlan] = useState<WeekPlanDay[]>(emptyWeekPlan);
   const [dragOverDay, setDragOverDay] = useState<Weekday | null>(null);
+  const [finishing, setFinishing] = useState(false);
   const [checkedEssentials, setCheckedEssentials] = useState<string[]>(
     essentials.map((item) => item.name),
   );
@@ -339,7 +340,9 @@ export default function ShoppingWizard({
     setExtraInput("");
   }
 
-  function finishTrip() {
+  async function finishTrip() {
+    if (finishing) return;
+    setFinishing(true);
     const draft: ShoppingDraft = {
       selectedMealIds,
       weekPlan,
@@ -353,6 +356,23 @@ export default function ShoppingWizard({
       }),
     };
     sessionStorage.setItem(SHOPPING_DRAFT_KEY, JSON.stringify(draft));
+
+    try {
+      const response = await fetch("/api/trips", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          weekPlan,
+          mealCost,
+          itemCount: mergedList.length,
+        }),
+      });
+      if (!response.ok) {
+        console.error("Could not save trip history", response.status);
+      }
+    } catch (error) {
+      console.error("Could not save trip history", error);
+    }
 
     const weekDaysWithMeals = weekPlan.filter((day) => day.mealId !== null).length;
     void fetch("/api/log", {
@@ -690,9 +710,9 @@ export default function ShoppingWizard({
             <Button
               type="button"
               onClick={finishTrip}
-              disabled={mergedList.length === 0}
+              disabled={mergedList.length === 0 || finishing}
             >
-              Finish & export
+              {finishing ? "Saving…" : "Finish & export"}
             </Button>
           </div>
         </section>

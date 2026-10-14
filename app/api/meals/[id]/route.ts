@@ -43,7 +43,7 @@ export async function PUT(request: Request, context: RouteContext) {
         .from(meals)
         .where(eq(meals.id, mealId));
 
-      if (!existingMeal) {
+      if (!existingMeal || existingMeal.deletedAt) {
         return NextResponse.json({ error: "Meal not found" }, { status: 404 });
       }
 
@@ -113,19 +113,22 @@ export async function DELETE(request: Request, context: RouteContext) {
 
       const [meal] = await db.select().from(meals).where(eq(meals.id, mealId));
 
-      if (!meal) {
+      if (!meal || meal.deletedAt) {
         return NextResponse.json({ error: "Meal not found" }, { status: 404 });
       }
 
-      await db.delete(meals).where(eq(meals.id, mealId));
-      await invalidate(CACHE_KEYS.meals);
+      await db
+        .update(meals)
+        .set({ deletedAt: new Date() })
+        .where(eq(meals.id, mealId));
+      await invalidate(CACHE_KEYS.meals, CACHE_KEYS.deletedMeals);
 
       logAction({
         action: "meal.delete",
         outcome: "success",
         resource: "meal",
         resourceId: mealId,
-        summary: `Deleted meal "${meal.title}"`,
+        summary: `Archived meal "${meal.title}"`,
         title: meal.title,
       });
 

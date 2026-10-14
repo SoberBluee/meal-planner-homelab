@@ -103,3 +103,27 @@ export type ShoppingDraft = {
 };
 
 export const SHOPPING_DRAFT_KEY = "meal-planner-shopping-draft";
+
+export type TripDayRecord = {
+  id: number;
+  tripId: number;
+  day: string;
+  mealId: number | null;
+  mealTitle: string;
+  cookerName: string | null;
+};
+
+export type TripRecord = {
+  id: number;
+  createdAt: string | Date;
+  mealCost: number | null;
+  itemCount: number;
+  days: TripDayRecord[];
+};
+
+export type DeletedMealRecord = {
+  id: number;
+  title: string;
+  deletedAt: string | Date;
+  ingredientCount: number;
+};

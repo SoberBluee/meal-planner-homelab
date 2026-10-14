@@ -11,6 +11,7 @@ export const meals = mysqlTable("meals", {
   title: varchar("title", { length: 255 }).notNull(),
   price: double("price"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  deletedAt: timestamp("deleted_at"),
 });
 
 export const mealIngredients = mysqlTable("meal_ingredients", {
@@ -48,6 +49,24 @@ export const people = mysqlTable("people", {
   id: int("id").autoincrement().primaryKey(),
   name: varchar("name", { length: 255 }).notNull().unique(),
   sortOrder: int("sort_order").notNull().default(0),
+});
+
+export const shoppingTrips = mysqlTable("shopping_trips", {
+  id: int("id").autoincrement().primaryKey(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  mealCost: double("meal_cost"),
+  itemCount: int("item_count").notNull().default(0),
+});
+
+export const shoppingTripDays = mysqlTable("shopping_trip_days", {
+  id: int("id").autoincrement().primaryKey(),
+  tripId: int("trip_id")
+    .notNull()
+    .references(() => shoppingTrips.id, { onDelete: "cascade" }),
+  day: varchar("day", { length: 16 }).notNull(),
+  mealId: int("meal_id"),
+  mealTitle: varchar("meal_title", { length: 255 }).notNull(),
+  cookerName: varchar("cooker_name", { length: 255 }),
 });
 
 export type Meal = typeof meals.$inferSelect;

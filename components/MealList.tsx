@@ -36,7 +36,7 @@ export default function MealList({
   }
 
   async function deleteMeal(id: number) {
-    if (!window.confirm("Delete this meal?")) return;
+    if (!window.confirm("Delete this meal? You can restore it from History.")) return;
     await fetch(`/api/meals/${id}`, { method: "DELETE" });
     await refreshMeals();
   }
